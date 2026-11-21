@@ -1,4 +1,4 @@
-"""全局配置：应用信息、便携数据目录、默认设置项。"""
+"""全局配置：应用信息、数据目录（便携 / 安装版）、默认设置项。"""
 from __future__ import annotations
 
 import os
@@ -9,12 +9,34 @@ APP_NAME = "RSS 阅读器"
 APP_ID = "dsrssreader"
 APP_VERSION = "1.0.0"
 
-# 项目根目录（run.py 所在目录），数据默认与程序放在一起，整个文件夹拷走即可迁移。
-BASE_DIR = Path(__file__).resolve().parents[1]
+FROZEN = bool(getattr(sys, "frozen", False))
+
+if FROZEN:
+    # 打包成 exe 后：程序目录 = exe 所在目录，资源在 PyInstaller 解包目录里
+    BASE_DIR = Path(sys.executable).resolve().parent
+    ASSET_DIR = Path(getattr(sys, "_MEIPASS", BASE_DIR)) / "assets"
+else:
+    BASE_DIR = Path(__file__).resolve().parents[1]
+    ASSET_DIR = BASE_DIR / "assets"
+
+
+def appdata_dir() -> Path:
+    """安装版的数据目录：%APPDATA%\\DSRssReader（卸载时保留）。"""
+    return Path(os.environ.get("APPDATA", Path.home())) / "DSRssReader"
 
 
 def _pick_data_dir() -> Path:
-    """优先使用程序目录下的 data/（便携）；不可写时退回 %APPDATA%。"""
+    """安装版用 %APPDATA%；源码/便携版优先用程序目录下的 data/。
+
+    在 exe 旁边放一个 `portable.txt` 就能强制便携模式（数据跟程序放在一起）。
+    """
+    if FROZEN and not (BASE_DIR / "portable.txt").exists():
+        fallback = appdata_dir()
+        try:
+            fallback.mkdir(parents=True, exist_ok=True)
+            return fallback
+        except OSError:
+            pass
     portable = BASE_DIR / "data"
     try:
         portable.mkdir(parents=True, exist_ok=True)
@@ -23,7 +45,7 @@ def _pick_data_dir() -> Path:
         probe.unlink()
         return portable
     except OSError:
-        fallback = Path(os.environ.get("APPDATA", Path.home())) / "DSRssReader"
+        fallback = appdata_dir()
         fallback.mkdir(parents=True, exist_ok=True)
         return fallback
 
@@ -38,6 +60,7 @@ def ensure_dirs() -> None:
     """确保数据目录与图片缓存目录存在。"""
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
+
 
 # 默认设置（会被数据库里的用户设置覆盖）
 DEFAULTS = {
@@ -63,4 +86,4 @@ IS_WINDOWS = sys.platform.startswith("win")
 
 
 def asset(name: str) -> Path:
-    return BASE_DIR / "assets" / name
+    return ASSET_DIR / name

@@ -812,7 +812,39 @@ class App(tk.Tk):
             self.load_articles(reset=True)
 
     # ================================================================== 刷新
+    # 首次启动（空库）时加几个常用源，省得用户一开始面对空窗口
+    RECOMMENDED_FEEDS = (
+        ("少数派", "https://sspai.com/feed"),
+        ("IT之家", "https://www.ithome.com/rss/"),
+        ("开源中国", "https://www.oschina.net/news/rss"),
+        ("Solidot", "https://www.solidot.org/index.rss"),
+        ("云风的 BLOG", "https://blog.codingnow.com/feed/"),
+    )
+
+    def _seed_first_run(self) -> bool:
+        """空库首次启动时放几个示例订阅，返回是否真的加了。"""
+        if self.store.get_setting("seeded") == "1":
+            return False
+        self.store.set_setting("seeded", "1")
+        added = 0
+        folder_id = None
+        try:
+            folder_id = self.store.add_folder("示例订阅")
+        except Exception:
+            folder_id = None
+        for title, url in self.RECOMMENDED_FEEDS:
+            try:
+                self.store.add_feed(url, title, "", folder_id)
+                added += 1
+            except Exception:
+                continue
+        return added > 0
+
     def _startup_refresh(self) -> None:
+        if not self.store.feeds() and self._seed_first_run():
+            self.reload_sidebar()
+            self.load_articles(reset=True)
+            self.update_counts()
         if self.store.feeds() and not self.refreshing:
             self.start_refresh(reason="startup")
 

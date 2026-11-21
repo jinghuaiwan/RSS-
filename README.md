@@ -1,8 +1,25 @@
-# RSS 阅读器（Windows / Python + tkinter）
+# RSS 阅读器（Windows）
 
-一个不用安装、双击即开的本地 RSS 阅读器：三栏布局、订阅分组、未读管理、收藏、搜索、OPML 导入导出、定时刷新、暗色/亮色主题，正文里的图片也能直接显示。
+一个本地 RSS 阅读器：三栏布局、订阅分组、未读管理、收藏、搜索、OPML 导入导出、定时刷新、暗色/亮色主题，正文里的图片也能直接显示。两种用法：**装成一个正常的 Windows 程序**，或者直接跑源码。
 
 ![暗色主题](shots/dark.png)
+
+## 安装版（推荐，不需要 Python）
+
+双击 **`dist\安装RSS阅读器.exe`**（约 50 MB，已内置 Python 与依赖）：
+
+![安装程序](shots/installer.png)
+
+- 装到 `%LOCALAPPDATA%\Programs\RSS 阅读器`，**不需要管理员权限**，也不写系统目录。
+- 自动创建开始菜单项和桌面快捷方式，并在「设置 → 应用 → 已安装的应用」里登记卸载项。
+- 数据存在 `%APPDATA%\DSRssReader`（`reader.db` 与 `cache/` 图片缓存），**卸载不会删数据**，重装后订阅和已读状态都还在。
+- 卸载：开始菜单 →「RSS 阅读器」右键 → 卸载，或「设置 → 应用」里卸载；也可以运行 `RSS阅读器.exe --uninstall`。
+- 想带着数据走：把程序目录里放一个空的 `portable.txt`，数据就会写在程序目录的 `data\` 下，不再用 `%APPDATA%`。
+- 命令行静默安装（给脚本用）：`安装RSS阅读器.exe --silent [--dir "目标目录"] [--no-desktop] [--launch]`。
+
+第一次启动会自动加好「示例订阅」分组（少数派、IT之家、开源中国、Solidot、云风的 BLOG）并拉取文章，删掉即可。
+
+![安装后第一次打开](shots/installed2.png)
 
 <details>
 <summary>亮色主题 / 设置 / 添加订阅</summary>
@@ -15,7 +32,7 @@
 
 </details>
 
-## 快速开始
+## 从源码运行
 
 1. 双击 **`启动RSS阅读器.bat`**。
 2. 第一次打开是空库，点左上角 **＋ 添加订阅**，把 RSS/Atom 地址粘进去（也可以直接粘网站首页，程序会自动找订阅链接）。
@@ -34,7 +51,8 @@
 程序只用 **Python 标准库 + `lxml` + `Pillow`**（tkinter 自带）。`.bat` 会按下面的顺序找解释器：
 
 1. 本目录下的 `python\pythonw.exe`（想把便携版 Python 丢进来就放这里）；
-2. `PATH` 里的 `pythonw.exe`。
+2. `%USERPROFILE%\.dsh\dsh-runtimes\dsh-primary-runtime\dependencies\python\pythonw.exe`（本机开发时用的那个）；
+3. `PATH` 里的 `pythonw.exe`。
 
 想用自己的 Python，只要装好依赖即可：
 
@@ -84,22 +102,25 @@ python run.py
 
 ## 数据放在哪
 
-默认是**便携模式**：`rss-reader\data\` 下
+- **安装版**：`%APPDATA%\DSRssReader\`（`reader.db`、`cache\` 图片缓存、`reader.log`）。卸载保留，重装继续用。
+- **源码版**：默认**便携模式**，`rss-reader\data\` 下；程序目录不可写时自动回退 `%APPDATA%\DSRssReader`。
+- 安装版想改回便携：在程序目录里放一个空文件 `portable.txt`，数据就写到程序目录的 `data\`。
 
-- `reader.db`：SQLite（订阅、文章、设置）
-- `cache\`：正文图片缓存
-- `reader.log`：崩溃日志
-
-如果程序目录不可写（比如放在 `C:\Program Files`），会自动改用 `%APPDATA%\DSRssReader`。设置里能看到当前数据目录，也能一键打开。
+设置里能看到当前数据目录，也能一键打开。
 
 ## 项目结构
 
 ```
 rss-reader/
-├─ 启动RSS阅读器.bat      # 双击启动（找 pythonw，无黑框）
-├─ run.py                 # 入口：DPI 感知、建库、起窗口、崩溃日志
+├─ dist\安装RSS阅读器.exe   # 安装包（单文件，内置 Python 与依赖）
+├─ 启动RSS阅读器.bat      # 源码版双击启动（找 pythonw，无黑框）
+├─ run.py                 # 入口：DPI 感知、建库、起窗口、崩溃日志、--uninstall
+├─ installer.py           # 安装程序：拷文件、建快捷方式、登记卸载项、进度条
 ├─ app/
-│  ├─ config.py           # 路径、默认设置（含便携/AppData 回退）
+│  ├─ config.py           # 路径、默认设置（exe 版 vs 源码版、便携/AppData 判定）
+│  ├─ install_info.py     # 安装路径、开始菜单/桌面位置、注册表键
+│  ├─ shortcuts.py        # 建/删 .lnk（WScript.Shell）、写 HKCU 卸载项
+│  ├─ uninstall.py        # 卸载：删快捷方式、注销、延时删目录
 │  ├─ theme.py            # 暗/亮配色、ttk 样式、字体、暗色标题栏
 │  ├─ store.py            # SQLite 数据层（WAL + 线程锁），全部查询在这
 │  ├─ fetcher.py          # HTTP（条件请求/代理/编码识别）、RSS/Atom 解析、正文提取、订阅探测
@@ -109,9 +130,39 @@ rss-reader/
 │  ├─ dialogs.py          # 添加订阅/设置/重命名/选择分组等弹窗
 │  └─ ui.py               # 主窗口：三栏布局、列表、阅读区、刷新调度
 ├─ assets/                # app.ico / app-256.png
-└─ tools/                 # 开发辅助：截图、造演示数据、探测源、检查布局
+├─ tests/                 # 28 个单元/冒烟测试
+├─ tools/                 # 开发辅助：截图、造演示数据、探测源、检查布局、拉 PyInstaller wheel
+└─ shots/                 # 截图
 ```
 
+## 重新打包 exe
+
+```bat
+:: 1) 依赖：PyInstaller 装在 vendor/ 里（tools\fetch_pyinstaller.py 下载 wheel 后解包）
+:: 2) 先出程序目录（onedir）
+set PYTHONPATH=%CD%\vendor
+python -m PyInstaller --noconfirm --clean --windowed --name RSS阅读器 ^
+  --icon assets\app.ico ^
+  --add-data "assets\app.ico;assets" --add-data "assets\app-256.png;assets" ^
+  run.py
+:: 3) 再把程序目录塞进单文件安装包
+python -m PyInstaller --noconfirm --clean --windowed --onefile --name 安装RSS阅读器 ^
+  --icon assets\app.ico ^
+  --add-data "dist\RSS阅读器;payload/app" ^
+  --add-data "assets\app.ico;assets" --add-data "assets\app-256.png;assets" ^
+  installer.py
+```
+
+产物在 `dist\`：`RSS阅读器\`（绿色目录版，可直接拷走运行）和 `安装RSS阅读器.exe`。
+
+## 测试
+
+```bat
+cd rss-reader
+python -m unittest discover -s tests
+```
+
+覆盖：数据层增删改查与排序/搜索转义/保留策略、RSS/Atom/RDF 解析与编码识别、链接绝对化、正文提取、OPML 往返、tk 渲染（含图片占位）、弹窗返回值、主窗口冒烟。
 
 ## 已知限制
 

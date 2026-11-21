@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# 本地数据（订阅、文章、图片缓存）
+data/
+.testtmp/
+.tmp/
+
+# 构建中间产物与依赖
+.build/
+.wheels/
+vendor/
+dist/
+build/
+*.spec
+pip.log
+
+# 编辑器 / 系统
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+~$*

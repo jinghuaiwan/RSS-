@@ -1,11 +1,15 @@
-"""关掉所有正在运行的阅读器窗口（发送 WM_CLOSE）。"""
+"""关掉所有正在运行的阅读器窗口（发送 WM_CLOSE）。用法：python tools/close_app.py [窗口标题]
+
+默认按「RSS 阅读器」匹配标题子串，也可以传别的标题（如「安装 RSS 阅读器」）。
+"""
 from __future__ import annotations
 
 import ctypes
+import sys
 import time
 from ctypes import wintypes
 
-TITLE = "RSS 阅读器"
+TITLE = sys.argv[1] if len(sys.argv) > 1 else "RSS 阅读器"
 WM_CLOSE = 0x0010
 
 

@@ -1,10 +1,11 @@
-"""启动入口：RSS 阅读器。
+"""RSS 阅读器启动入口。
 
 用法：
-    python run.py          # 控制台模式，能看到日志
-    pythonw run.py         # 无控制台（.bat 用的就是这个）
+    python run.py               # 控制台模式，能看到日志
+    pythonw run.py              # 无控制台
+    RSS阅读器.exe --uninstall    # 卸载（删程序、快捷方式、注册表项，保留数据）
 
-崩溃时会写日志到 data/reader.log。
+崩溃时会写日志到 data/reader.log（安装版在 %APPDATA%\\DSRssReader\\reader.log）。
 """
 from __future__ import annotations
 
@@ -33,9 +34,17 @@ def _enable_dpi_awareness() -> None:
         pass
 
 
+def _bootstrap_path() -> None:
+    if getattr(sys, "frozen", False):
+        return
+    here = os.path.dirname(os.path.abspath(__file__))
+    if here not in sys.path:
+        sys.path.insert(0, here)
+
+
 def _log_crash(exc: BaseException) -> None:
     try:
-        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        _bootstrap_path()
         from app import config
 
         config.DATA_DIR.mkdir(parents=True, exist_ok=True)
@@ -46,11 +55,19 @@ def _log_crash(exc: BaseException) -> None:
         pass
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    args = list(sys.argv[1:] if argv is None else argv)
     _enable_dpi_awareness()
-    here = os.path.dirname(os.path.abspath(__file__))
-    if here not in sys.path:
-        sys.path.insert(0, here)
+    _bootstrap_path()
+    if "--uninstall" in args:
+        try:
+            from app.uninstall import ask_and_uninstall
+
+            return ask_and_uninstall()
+        except BaseException as exc:  # noqa: BLE001
+            traceback.print_exc()
+            _log_crash(exc)
+            return 1
     try:
         from app import config
         from app.store import Store
@@ -69,9 +86,11 @@ def main() -> int:
         try:
             from tkinter import messagebox
 
+            from app import config
+
             messagebox.showerror("RSS 阅读器启动失败",
                                  f"{type(exc).__name__}: {exc}\n\n"
-                                 "详细信息已写入 data/reader.log")
+                                 f"详细信息已写入 {config.LOG_PATH}")
         except Exception:
             pass
         return 1

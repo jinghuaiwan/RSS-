@@ -6,7 +6,9 @@
 
 ## 安装版（推荐，不需要 Python）
 
-双击 **`dist\安装RSS阅读器.exe`**（约 50 MB，已内置 Python 与依赖）：
+**直接下载安装包**：[Releases · v1.0.0](https://github.com/jinghuaiwan/RSS-/releases/latest) → `RSSReader-1.0.0-Setup.exe`（约 50 MB，已内置 Python 与依赖）。
+
+自己打包的话，双击 `dist\安装RSS阅读器.exe`（构建方式见文末「重新打包 exe」）。安装界面长这样：
 
 ![安装程序](shots/installer.png)
 

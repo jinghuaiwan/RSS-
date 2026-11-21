@@ -34,8 +34,7 @@
 程序只用 **Python 标准库 + `lxml` + `Pillow`**（tkinter 自带）。`.bat` 会按下面的顺序找解释器：
 
 1. 本目录下的 `python\pythonw.exe`（想把便携版 Python 丢进来就放这里）；
-2. `%USERPROFILE%\.dsh\dsh-runtimes\dsh-primary-runtime\dependencies\python\pythonw.exe`（本机开发时用的那个）；
-3. `PATH` 里的 `pythonw.exe`。
+2. `PATH` 里的 `pythonw.exe`。
 
 想用自己的 Python，只要装好依赖即可：
 

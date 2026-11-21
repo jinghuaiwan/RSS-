@@ -110,19 +110,9 @@ rss-reader/
 │  ├─ dialogs.py          # 添加订阅/设置/重命名/选择分组等弹窗
 │  └─ ui.py               # 主窗口：三栏布局、列表、阅读区、刷新调度
 ├─ assets/                # app.ico / app-256.png
-├─ tests/                 # 28 个单元/冒烟测试
-├─ tools/                 # 开发辅助：截图、造演示数据、探测源、检查布局
-└─ shots/                 # 截图
+└─ tools/                 # 开发辅助：截图、造演示数据、探测源、检查布局
 ```
 
-## 测试
-
-```bat
-cd rss-reader
-python -m unittest discover -s tests
-```
-
-覆盖：数据层增删改查与排序/搜索转义/保留策略、RSS/Atom/RDF 解析与编码识别、链接绝对化、正文提取、OPML 往返、tk 渲染（含图片占位）、弹窗返回值、主窗口冒烟。
 
 ## 已知限制
 
